@@ -14,19 +14,19 @@ var WishItem = Backbone.Model.extend({
 
         switch (method) {
             case 'create':
-                return 'http://192.168.64.2/restservice/api/updatewish';
+                return 'http://192.168.64.2/restservice/api/updatewish/' + window.localStorage.get('token');
                 break;
             case 'read':
-                return 'http://192.168.64.2/restservice/api/wishbyid/' + this.id;
+                return 'https://localhost/wishlist-backend/api/wishlist' + window.localStorage.get('token');;
                 break;
             case 'update':
-                return 'http://192.168.64.2/restservice/api/updatewish';
+                return 'http://192.168.64.2/restservice/api/updatewish' + window.localStorage.get('token');;
                 break;
             case 'delete':
-                return 'http://192.168.64.2/restservice/api/deletewish/' + this.id;
+                return 'http://192.168.64.2/restservice/api/deletewish/' + this.id + "/" + window.localStorage.get('token');;
                 break;
             case 'add':
-                return 'http://192.168.64.2/restservice/api/adduser' + this.id;
+                return 'http://192.168.64.2/restservice/api/adduser' + this.id + "/" + window.localStorage.get('token');;
                 break;
         }
     },

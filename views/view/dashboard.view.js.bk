@@ -1,0 +1,116 @@
+var app = app || {};
+
+app.itemCollection = Backbone.Collection.extend({
+    model: app.wishlistItem,
+});
+
+app.singleItemView = Backbone.View.extend({
+    tagName: 'tr',
+    className: 'removeMe',
+    template: _.template($('#wishListItem').html()),
+    initialize: function(){
+        this.template =  _.template($('#wishListItem').html());
+    },
+    events: {
+        'click .edit': 'edit',
+        'click .delete': 'delete'
+    },
+    edit: function () {
+        console.log(this.model.attributes);
+        $('#itemName').val(this.model.attributes.name);
+        $('#itemURL').val(this.model.attributes.url);
+        $('#itemPriority').val(this.model.attributes.priority_id);
+        $('#itemPrice').val(this.model.attributes.price);
+        $("#exampleModal").modal('toggle');
+
+    },
+    delete: function () {
+        console.log(collection.remove(this.model));
+        itemView.removeItem(this.model);
+        $('#itemlist').html(itemView.render().el);
+        $(".removeMe").unwrap()
+        $('#example').DataTable()
+        this.model.destroy({ url: 'http://localhost/wishlist-backend/api/item/' + this.model.id })
+        .then((x)=>{
+            console.log(x);
+        },(err)=>{
+            console.log("err", err);
+        });
+    },
+    render: function () {
+        var template;
+        try {
+            template = this.template(this.model.toJSON())
+
+        } catch (err) {
+            template = this.template(this.model)
+        }
+        this.$el.html(template);
+        return this;
+    },
+});
+
+app.collectionItemView = Backbone.View.extend({
+    tagName: 'span',
+    className: 'remove',
+    render: function () {
+        this.collection.each(this.addItem, this)
+        return this;
+    },
+    addItem: function (wishItem) {
+        var wishItemView = new app.singleItemView({ model: wishItem });
+        this.$el.append(wishItemView.render().el);
+    },
+    removeItem: function(wishItem){
+        this.remove(wishItem);
+    }
+});
+
+var collection;
+var itemView;
+var dr;
+new app.wishlist({ url: "http://localhost/wishlist-backend/api/wishlist" }).fetch({
+    success: (result) => {
+        collection = new app.itemCollection(result.toJSON().data.itemLists);
+        var model = new app.shareModel({
+            "share": "http://localhost/wishlist-frontend/views/login.html#share/" + result.toJSON().data['wishlist_id']
+        });
+        $('#shareURLPlaceholder').html('<a href="' + model.get('share') + '"><p>' + model.get('share') + '</p>')
+        itemView = new app.collectionItemView({ collection: collection });
+        $('#itemlist').html(itemView.render().el);
+        $(".removeMe").unwrap()
+        dr = $('#example').DataTable();
+    }
+});
+
+$('#addItem').click(function (e) {
+    var item = new app.wishlistItem({
+        "name": $('#itemName').val(),
+        "url": $('#itemURL').val(),
+        "priority": $('#itemPriority').val(),
+        "priority_id": $('#itemPriority').val(),
+        "price": $('#itemPrice').val()
+    });
+    item.save({}, {
+        success: function (model, response, options) {
+            $('#exampleModal').modal('toggle');
+            itemView.addItem(response.data);
+            $('#itemlist').html(itemView.render().el);
+            $(".removeMe").unwrap()
+            $('#example').DataTable();
+            Swal.fire(
+                'Good job!',
+                'Saved Successfully',
+                'success'
+            );
+        },
+        error: function (model, xhr, options) {
+            Swal.fire(
+                'Failed!',
+                'Failed to save the !',
+                'error'
+            )
+            console.log("Something went wrong while saving the model");
+        }
+    });
+});
